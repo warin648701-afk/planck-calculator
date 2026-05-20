@@ -318,6 +318,18 @@ function formatNumberNoExp(num) {
   return num.toFixed(6);
 }
 
+function fmtPower(num, base) {
+  // Show number in the form base × 10^exp
+  if (num === 0) return '0';
+  const exp = Math.floor(Math.log10(Math.abs(num)));
+  const mant = num / Math.pow(10, exp);
+  return mant.toFixed(4) + ' × 10<sup>' + exp + '</sup>';
+}
+
+function fmt(num) {
+  return formatNumberShort(num);
+}
+
 function addStep(label, content) {
   const container = document.getElementById('steps-container');
   const div = document.createElement('div');
@@ -349,18 +361,22 @@ function calculate() {
   }
 
   let lambda, freq, energy;
-  const steps = [];
+  let lambdaInUnit = 0;
+  let unitLabel = 'm';
 
-  // Convert inputs to SI
-  if (hasLambda) lambda = lambdaInput * lambdaUnit;
+  if (hasLambda) {
+    lambdaInUnit = lambdaInput;
+    if (lambdaUnit === 1e-9) unitLabel = 'nm';
+    else if (lambdaUnit === 1e-6) unitLabel = 'μm';
+    else if (lambdaUnit === 1e-10) unitLabel = 'Å';
+    lambda = lambdaInput * lambdaUnit;
+  }
   if (hasFreq) freq = freqInput;
   if (hasEnergy) energy = energyInput * energyUnit;
 
   const toCalc = [];
 
-  // Determine what to calculate
   if (count === 1) {
-    // Only 1 value given → calculate the other 2
     if (hasLambda) { toCalc.push('ν'); toCalc.push('E'); }
     if (hasFreq) { toCalc.push('λ'); toCalc.push('E'); }
     if (hasEnergy) { toCalc.push('λ'); toCalc.push('ν'); }
@@ -375,104 +391,166 @@ function calculate() {
     if (count === 2 && !hasEnergy) toCalc.push('E');
   }
 
-  // Recalculate if all 3 given (for display consistency)
+  // Calculate all values
   if (toCalc.includes('λ') || toCalc.includes('all')) {
-    if (hasFreq) {
-      lambda = C / freq;
-    } else if (hasEnergy) {
-      lambda = H * C / energy;
-    }
+    if (hasFreq) lambda = C / freq;
+    else if (hasEnergy) lambda = H * C / energy;
   }
   if (toCalc.includes('ν') || toCalc.includes('all')) {
-    if (hasLambda) {
-      freq = C / lambda;
-    } else if (hasEnergy) {
-      freq = energy / H;
-    }
+    if (hasLambda) freq = C / lambda;
+    else if (hasEnergy) freq = energy / H;
   }
   if (toCalc.includes('E') || toCalc.includes('all')) {
-    if (hasFreq) {
-      energy = H * freq;
-    } else if (hasLambda) {
-      energy = H * C / lambda;
+    if (hasFreq) energy = H * freq;
+    else if (hasLambda) energy = H * C / lambda;
+  }
+
+  let stepNum = 0;
+
+  // ─── CASE: รู้ λ → หา ν และ E ───────────────────────────
+  if (hasLambda && count === 1) {
+    addStep('📥 โจทย์กำหนด', 'λ = ' + lambdaInUnit + ' ' + unitLabel);
+
+    stepNum++;
+    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — แปลงหน่วย λ เป็นเมตร',
+      'λ = ' + lambdaInUnit + ' ' + unitLabel +
+      '<br>λ = ' + lambdaInUnit + ' × 10<sup>' + Math.round(Math.log10(lambdaUnit)) + '</sup> m' +
+      '<br>λ = <span class="highlight">' + fmt(lambda) + ' m</span>'
+    );
+
+    stepNum++;
+    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาความถี่ (ν) จากสูตร c = λν',
+      'จาก &nbsp; c = λν &nbsp; → &nbsp; ν = c / λ' +
+      '<br><br>ν = <span class="highlight-blue">3 × 10⁸</span> ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
+      '<br>ν = <span class="highlight">' + fmt(freq) + ' Hz</span>'
+    );
+
+    stepNum++;
+    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาพลังงาน (E) จากสูตร E = hν',
+      'จาก &nbsp; E = hν &nbsp; → &nbsp; E = h × ν' +
+      '<br><br>E = <span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
+      '<br>E = <span class="highlight">' + fmt(energy) + ' J</span>'
+    );
+
+    stepNum++;
+    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — ตรวจสอบด้วยสูตร E = hc/λ',
+      'E = hc / λ' +
+      '<br><br>E = (<span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
+      '<br>E = <span class="highlight">' + fmt(energy) + ' J</span> &nbsp; ✓ ตรงกัน'
+    );
+
+  // ─── CASE: รู้ ν → หา λ และ E ───────────────────────────
+  } else if (hasFreq && count === 1) {
+    addStep('📥 โจทย์กำหนด', 'ν = ' + fmt(freqInput) + ' Hz');
+
+    stepNum++;
+    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาความยาวคลื่น (λ) จากสูตร c = λν',
+      'จาก &nbsp; c = λν &nbsp; → &nbsp; λ = c / ν' +
+      '<br><br>λ = <span class="highlight-blue">3 × 10⁸</span> ÷ <span class="highlight-green">' + fmt(freq) + '</span>' +
+      '<br>λ = <span class="highlight">' + fmt(lambda) + ' m</span>'
+    );
+
+    stepNum++;
+    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาพลังงาน (E) จากสูตร E = hν',
+      'E = hν' +
+      '<br><br>E = <span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
+      '<br>E = <span class="highlight">' + fmt(energy) + ' J</span>'
+    );
+
+  // ─── CASE: รู้ E → หา ν และ λ ───────────────────────────
+  } else if (hasEnergy && count === 1) {
+    addStep('📥 โจทย์กำหนด', 'E = ' + fmt(energyInput * energyUnit) + ' J');
+
+    stepNum++;
+    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาความถี่ (ν) จากสูตร E = hν',
+      'จาก &nbsp; E = hν &nbsp; → &nbsp; ν = E / h' +
+      '<br><br>ν = <span class="highlight-green">' + fmt(energy) + '</span> ÷ <span class="highlight-blue">6.626 × 10⁻³⁴</span>' +
+      '<br>ν = <span class="highlight">' + fmt(freq) + ' Hz</span>'
+    );
+
+    stepNum++;
+    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาความยาวคลื่น (λ) จากสูตร c = λν',
+      'จาก &nbsp; c = λν &nbsp; → &nbsp; λ = c / ν' +
+      '<br><br>λ = <span class="highlight-blue">3 × 10⁸</span> ÷ <span class="highlight-green">' + fmt(freq) + '</span>' +
+      '<br>λ = <span class="highlight">' + fmt(lambda) + ' m</span>'
+    );
+
+    stepNum++;
+    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — ตรวจสอบด้วยสูตร E = hc/λ',
+      'E = hc / λ' +
+      '<br><br>E = (<span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
+      '<br>E = <span class="highlight">' + fmt(energy) + ' J</span> &nbsp; ✓ ตรงกัน'
+    );
+
+  // ─── CASE: รู้ 2 ค่า — หาค่าที่เหลือ ─────────────────────
+  } else {
+    const givenParts = [];
+    if (hasLambda) givenParts.push('λ = ' + fmt(lambdaInput * lambdaUnit) + ' m');
+    if (hasFreq) givenParts.push('ν = ' + fmt(freqInput) + ' Hz');
+    if (hasEnergy) givenParts.push('E = ' + fmt(energyInput * energyUnit) + ' J');
+    addStep('📥 กำหนดให้', givenParts.join(', '));
+
+    if (toCalc.includes('ν')) {
+      stepNum++;
+      addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาความถี่ (ν) จาก c = λν',
+        'ν = c / λ' +
+        '<br><br>ν = <span class="highlight-blue">3 × 10⁸</span> ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
+        '<br>ν = <span class="highlight">' + fmt(freq) + ' Hz</span>'
+      );
     }
-  }
-
-  // Display given values first
-  const givenParts = [];
-  if (hasLambda) givenParts.push('λ = ' + formatNumberShort(lambdaInput * lambdaUnit) + ' m');
-  if (hasFreq) givenParts.push('ν = ' + formatNumberShort(freqInput) + ' Hz');
-  if (hasEnergy) givenParts.push('E = ' + formatNumberShort(energyInput * energyUnit) + ' J');
-
-  addStep('📥 ค่าที่กำหนดให้', givenParts.join(', '));
-
-  // Step-by-step for ν using c = λν
-  if (toCalc.includes('ν')) {
-    addStep('📌 ขั้นตอนที่ 1 — หาความถี่ (ν) จากสูตร <b>c = λν</b>',
-      'ν = c / λ<br>' +
-      'ν = <span class="highlight-blue">3 × 10⁸</span> / <span class="highlight-green">' + formatNumberNoExp(lambda) + '</span><br>' +
-      'ν = <span class="highlight">' + formatNumberShort(freq) + '</span> Hz'
-    );
-  }
-
-  // Step-by-step for λ using c = λν
-  if (toCalc.includes('λ')) {
-    addStep('📌 ขั้นตอนที่ 1 — หาความยาวคลื่น (λ) จากสูตร <b>c = λν</b>',
-      'λ = c / ν<br>' +
-      'λ = <span class="highlight-blue">3 × 10⁸</span> / <span class="highlight-green">' + formatNumberNoExp(freq) + '</span><br>' +
-      'λ = <span class="highlight">' + formatNumberShort(lambda) + '</span> m'
-    );
-  }
-
-  // Step-by-step for E using E = hν
-  if (toCalc.includes('E') && toCalc.includes('ν')) {
-    addStep('📌 ขั้นตอนที่ 2 — หาพลังงาน (E) จากสูตร <b>E = hν</b>',
-      'E = <span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-green">' + formatNumberNoExp(freq) + '</span><br>' +
-      'E = <span class="highlight">' + formatNumberShort(energy) + '</span> J'
-    );
-  } else if (toCalc.includes('E') && !toCalc.includes('ν')) {
-    addStep('📌 ขั้นตอนที่ 1 — หาพลังงาน (E) จากสูตร <b>E = hc/λ</b>',
-      'E = (<span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) / <span class="highlight-green">' + formatNumberNoExp(lambda) + '</span><br>' +
-      'E = <span class="highlight">' + formatNumberShort(energy) + '</span> J'
-    );
-  }
-
-  // if all 3 given, show verification
-  if (toCalc.includes('all')) {
-    addStep('📌 ตรวจสอบ — คำนวณ ν จาก λ',
-      'ν = c / λ = <span class="highlight">' + formatNumberShort(freq) + '</span> Hz'
-    );
-    addStep('📌 ตรวจสอบ — คำนวณ E จาก ν',
-      'E = hν = <span class="highlight">' + formatNumberShort(energy) + '</span> J'
-    );
-    addStep('📌 ตรวจสอบ — คำนวณ E จาก λ',
-      'E = hc/λ = <span class="highlight">' + formatNumberShort(energy) + '</span> J'
-    );
+    if (toCalc.includes('λ')) {
+      stepNum++;
+      addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาความยาวคลื่น (λ) จาก c = λν',
+        'λ = c / ν' +
+        '<br><br>λ = <span class="highlight-blue">3 × 10⁸</span> ÷ <span class="highlight-green">' + fmt(freq) + '</span>' +
+        '<br>λ = <span class="highlight">' + fmt(lambda) + ' m</span>'
+      );
+    }
+    if (toCalc.includes('E')) {
+      if (hasFreq) {
+        stepNum++;
+        addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาพลังงาน (E) จาก E = hν',
+          'E = hν' +
+          '<br><br>E = <span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
+          '<br>E = <span class="highlight">' + fmt(energy) + ' J</span>'
+        );
+      } else if (hasLambda) {
+        stepNum++;
+        addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาพลังงาน (E) จาก E = hc/λ',
+          'E = hc / λ' +
+          '<br><br>E = (<span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
+          '<br>E = <span class="highlight">' + fmt(energy) + ' J</span>'
+        );
+      }
+    }
+    if (toCalc.includes('all')) {
+      addStep('📌 ตรวจสอบ', 'ν = c/λ = <span class="highlight">' + fmt(freq) + '</span> Hz' +
+        '<br>E = hν = <span class="highlight">' + fmt(energy) + '</span> J' +
+        '<br>E = hc/λ = <span class="highlight">' + fmt(energy) + '</span> J');
+    }
   }
 
   // Final display
   const resultArea = document.getElementById('result-area');
   resultArea.classList.add('show');
-
   const answerBox = document.getElementById('answer-box');
   answerBox.style.display = 'block';
 
-  // Determine main answer
   if (count === 1 || toCalc.includes('all')) {
     document.getElementById('answer-label').textContent = 'ผลลัพธ์ทั้งหมด';
     document.getElementById('answer-value').innerHTML =
-      'λ = ' + formatNumberShort(lambda) + ' m' +
-      ' &nbsp;|&nbsp; ν = ' + formatNumberShort(freq) + ' Hz' +
-      ' &nbsp;|&nbsp; E = ' + formatNumberShort(energy) + ' J';
+      'λ = ' + fmt(lambda) + ' m' +
+      ' &nbsp;|&nbsp; ν = ' + fmt(freq) + ' Hz' +
+      ' &nbsp;|&nbsp; E = ' + fmt(energy) + ' J';
   } else if (toCalc.includes('ν') && !toCalc.includes('λ') && !toCalc.includes('E')) {
     document.getElementById('answer-label').textContent = 'ความถี่ (ν)';
-    document.getElementById('answer-value').innerHTML = formatNumberShort(freq) + ' <span class="ans-unit">Hz</span>';
+    document.getElementById('answer-value').innerHTML = fmt(freq) + ' <span class="ans-unit">Hz</span>';
   } else if (toCalc.includes('λ') && !toCalc.includes('E')) {
     document.getElementById('answer-label').textContent = 'ความยาวคลื่น (λ)';
-    document.getElementById('answer-value').innerHTML = formatNumberShort(lambda) + ' <span class="ans-unit">m</span>';
+    document.getElementById('answer-value').innerHTML = fmt(lambda) + ' <span class="ans-unit">m</span>';
   } else if (toCalc.includes('E')) {
     document.getElementById('answer-label').textContent = 'พลังงาน (E)';
-    document.getElementById('answer-value').innerHTML = formatNumberShort(energy) + ' <span class="ans-unit">J</span>';
+    document.getElementById('answer-value').innerHTML = fmt(energy) + ' <span class="ans-unit">J</span>';
   }
 }
 
