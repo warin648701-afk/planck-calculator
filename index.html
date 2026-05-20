@@ -294,36 +294,39 @@ function toSuperscript(n) {
   }).join('');
 }
 
+function trimFloat(s) {
+  return s.replace(/\.?0+$/, '');
+}
+
 function formatNumber(num) {
   if (Math.abs(num) === 0) return '0';
   if (Math.abs(num) >= 1e6 || (Math.abs(num) < 1e-3 && Math.abs(num) > 0)) {
     const exp = Math.floor(Math.log10(Math.abs(num)));
     const mantissa = num / Math.pow(10, exp);
-    return mantissa.toFixed(4) + ' × 10' + toSuperscript(exp);
+    return trimFloat(mantissa.toFixed(4)) + ' × 10' + toSuperscript(exp);
   }
-  return num.toFixed(6);
+  return trimFloat(num.toFixed(6));
 }
 
 function formatNumberShort(num) {
   if (Math.abs(num) === 0) return '0';
   const exp = Math.floor(Math.log10(Math.abs(num)));
   const mantissa = num / Math.pow(10, exp);
-  return mantissa.toFixed(4) + ' × 10' + toSuperscript(exp);
+  return trimFloat(mantissa.toFixed(4)) + ' × 10' + toSuperscript(exp);
 }
 
 function formatNumberNoExp(num) {
   if (Math.abs(num) >= 1e3 || (Math.abs(num) < 1e-3 && Math.abs(num) > 0)) {
     return formatNumberShort(num);
   }
-  return num.toFixed(6);
+  return trimFloat(num.toFixed(6));
 }
 
 function fmtPower(num, base) {
-  // Show number in the form base × 10^exp
   if (num === 0) return '0';
   const exp = Math.floor(Math.log10(Math.abs(num)));
   const mant = num / Math.pow(10, exp);
-  return mant.toFixed(4) + ' × 10<sup>' + exp + '</sup>';
+  return trimFloat(mant.toFixed(4)) + ' × 10<sup>' + exp + '</sup>';
 }
 
 function fmt(num) {
