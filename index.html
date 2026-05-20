@@ -259,6 +259,11 @@
   </div>
 
   <div class="input-group">
+    <label>ชื่อสี (ถ้ามี)</label>
+    <input type="text" id="colorName" placeholder="เช่น แสงสีเขียว, แสงสีม่วง, รังสีเอกซ์" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:12px 14px;color:#fff;font-size:15px;outline:none;width:100%">
+  </div>
+
+  <div class="input-group">
     <label>ความยาวคลื่น (λ) <span class="unit">— กรอกอย่างน้อย 1 ค่า</span></label>
     <div class="input-row">
       <input type="number" id="wavelength" step="any" placeholder="ค่าความยาวคลื่น">
@@ -435,36 +440,72 @@ function calculate() {
 
   let stepNum = 0;
 
-  // ─── CASE: รู้ λ → หา ν และ E ───────────────────────────
+  // ─── CASE: รู้ λ → หา E ตามรูปแบบอาจารย์ ────────────────
   if (hasLambda && count === 1) {
-    addStep('📥 โจทย์กำหนด', 'λ = ' + lambdaInUnit + ' ' + unitLabel);
+    const colorName = document.getElementById('colorName').value.trim();
+    const title = colorName ? colorName + ' ' + lambdaInUnit + ' ' + unitLabel : 'λ = ' + lambdaInUnit + ' ' + unitLabel;
 
+    // Parse λ into mantissa × 10^exp for clean display
+    const lamExp = Math.floor(Math.log10(lambda));
+    const lamMant = lambda / Math.pow(10, lamExp);
+    const lamMantStr = trimFloat(lamMant.toFixed(4));
+
+    // hc product: 6.625e-34 × 3e8 = 19.875e-26
+    const hc = H * C;
+    const hcExp = Math.floor(Math.log10(hc));
+    const hcMant = hc / Math.pow(10, hcExp);
+    const hcMantStr = trimFloat(hcMant.toFixed(4));
+
+    // For the combined step, show hc in form: (6.625 × 3) × 10^(-34+8)
+    const hcCombined = H * C;
+    const hcCombinedExp = -34 + 8; // -26
+    // We want to show hc as a × 10^-26, where a = 6.625×3 = 19.875
+    const hcProductMant = H * C / 1e-26;
+    const hcProductMantStr = trimFloat(hcProductMant.toFixed(4));
+
+    // λ in the form b × 10^lamExp
+    const lamVal = lambda;
+    // E = hc/λ
+    const eVal = H * C / lambda;
+
+    // Show E in ×10^-19 J format
+    const eInE19 = eVal / 1e-19;
+    const eRounded = eInE19.toFixed(2);
+
+    // Step 1: title
+    addStep('1. ชื่อสีและความยาวคลื่น', title);
+
+    // Step 2: unit conversion
     stepNum++;
-    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — แปลงหน่วย λ เป็นเมตร',
-      'λ = ' + lambdaInUnit + ' ' + unitLabel +
-      '<br>λ = ' + lambdaInUnit + ' × 10<sup>' + Math.round(Math.log10(lambdaUnit)) + '</sup> m' +
-      '<br>λ = <span class="highlight">' + fmt(lambda) + ' m</span>'
+    addStep('2. แปลงหน่วยเป็นเมตร',
+      '1 ' + unitLabel + ' = 10<sup>' + Math.round(Math.log10(lambdaUnit)) + '</sup> m' +
+      '<br>' + lambdaInUnit + ' ' + unitLabel + ' = ' + lambdaInUnit + ' × 10<sup>' + Math.round(Math.log10(lambdaUnit)) + '</sup> m' +
+      '<br><span class="highlight">= ' + lamMantStr + ' × 10<sup>' + lamExp + '</sup> m</span>'
     );
 
+    // Step 3: formula + substitution
     stepNum++;
-    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาความถี่ (ν) จากสูตร c = λν',
-      'จาก &nbsp; c = λν &nbsp; → &nbsp; ν = c / λ' +
-      '<br><br>ν = <span class="highlight-blue">3 × 10⁸</span> ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
-      '<br>ν = <span class="highlight">' + fmt(freq) + ' Hz</span>'
-    );
-
-    stepNum++;
-    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาพลังงาน (E) จากสูตร E = hν',
-      'จาก &nbsp; E = hν &nbsp; → &nbsp; E = h × ν' +
-      '<br><br>E = <span class="highlight-blue">6.625 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
-      '<br>E = <span class="highlight">' + fmt(energy) + ' J</span>'
-    );
-
-    stepNum++;
-    addStep('📌 ขั้นตอนที่ ' + stepNum + ' — ตรวจสอบด้วยสูตร E = hc/λ',
+    addStep('3. เขียนสูตร E = hc/λ และแทนค่า',
       'E = hc / λ' +
-      '<br><br>E = (<span class="highlight-blue">6.625 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
-      '<br>E = <span class="highlight">' + fmt(energy) + ' J</span> &nbsp; ✓ ตรงกัน'
+      '<br><br>E = <span class="highlight-blue">(6.625 × 10⁻³⁴ × 3 × 10⁸)</span> ÷ <span class="highlight-green">(' + lamMantStr + ' × 10<sup>' + lamExp + '</sup>)</span>'
+    );
+
+    // Step 4: combine exponents
+    stepNum++;
+    const topExp = -26; // -34 + 8
+    const bottomExp = lamExp;
+    const resultExp = topExp - bottomExp; // e.g., -26 - (-7) = -19
+    addStep('4. ยุบเลขยกกำลัง',
+      'ขั้นแรก: hc = (6.625 × 3) × 10<sup>-34+8</sup> = <span class="highlight-blue">' + hcProductMantStr + ' × 10<sup>' + topExp + '</sup></span>' +
+      '<br><br>นำไปหารด้วย λ = ' + lamMantStr + ' × 10<sup>' + lamExp + '</sup>' +
+      '<br><br>= (<span class="highlight-blue">' + hcProductMantStr + '</span> / ' + lamMantStr + ') × 10<sup>' + topExp + '-' + '(' + lamExp + ')' + '</sup>' +
+      '<br>= <span class="highlight">' + trimFloat((hcProductMant / lamMant).toFixed(4)) + ' × 10<sup>' + resultExp + '</sup> J</span>'
+    );
+
+    // Step 5: final answer in ×10^-19 J
+    stepNum++;
+    addStep('5. สรุปคำตอบ',
+      'E = <span class="highlight" style="font-size:20px;">' + eRounded + ' × 10<sup>-19</sup> J</span>'
     );
 
   // ─── CASE: รู้ ν → หา λ และ E ───────────────────────────
@@ -564,7 +605,12 @@ function calculate() {
   const answerBox = document.getElementById('answer-box');
   answerBox.style.display = 'block';
 
-  if (count === 1 || toCalc.includes('all')) {
+  if (hasLambda && count === 1) {
+    const eInE19 = energy / 1e-19;
+    const eRounded = eInE19.toFixed(2);
+    document.getElementById('answer-label').textContent = 'พลังงาน (E)';
+    document.getElementById('answer-value').innerHTML = eRounded + ' <span class="ans-unit">× 10⁻¹⁹ J</span>';
+  } else if (count === 1 || toCalc.includes('all')) {
     document.getElementById('answer-label').textContent = 'ผลลัพธ์ทั้งหมด';
     document.getElementById('answer-value').innerHTML =
       'λ = ' + fmt(lambda) + ' m' +
@@ -583,6 +629,7 @@ function calculate() {
 }
 
 function clearAll() {
+  document.getElementById('colorName').value = '';
   document.getElementById('wavelength').value = '';
   document.getElementById('frequency').value = '';
   document.getElementById('energy').value = '';
