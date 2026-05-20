@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>เครื่องคำนวณพลังงานคลื่นแม่เหล็กไฟฟ้า</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0c0c1d 0%, #1a1a3e 50%, #0c0c1d 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+  }
+  .container {
+    background: rgba(255,255,255,0.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 24px;
+    padding: 40px;
+    max-width: 700px;
+    width: 100%;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+  }
+  h1 {
+    color: #fff;
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .subtitle {
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    font-size: 14px;
+    margin-bottom: 30px;
+  }
+  .formula-banner {
+    background: rgba(100,150,255,0.1);
+    border: 1px solid rgba(100,150,255,0.2);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .formula-banner .formula {
+    color: #8ab4ff;
+    font-size: 15px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+  }
+  .formula-banner .formula span { color: #ffcc66; }
+  .input-group {
+    margin-bottom: 18px;
+  }
+  .input-group label {
+    display: block;
+    color: rgba(255,255,255,0.8);
+    font-size: 14px;
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .input-group label .unit {
+    color: rgba(255,255,255,0.4);
+    font-weight: normal;
+  }
+  .input-row {
+    display: flex;
+    gap: 12px;
+  }
+  .input-row input {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    transition: 0.2s;
+  }
+  .input-row input:focus {
+    border-color: #4a7cf7;
+    box-shadow: 0 0 0 3px rgba(74,124,247,0.2);
+  }
+  .input-row input::placeholder {
+    color: rgba(255,255,255,0.25);
+  }
+  .input-row select {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 12px 10px;
+    color: #fff;
+    font-size: 14px;
+    outline: none;
+    cursor: pointer;
+    min-width: 80px;
+  }
+  .input-row select option {
+    background: #1a1a3e;
+    color: #fff;
+  }
+  .calc-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #4a7cf7, #6c63ff);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+    margin-top: 8px;
+  }
+  .calc-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(74,124,247,0.3);
+  }
+  .calc-btn:active {
+    transform: translateY(0);
+  }
+  .result-area {
+    margin-top: 24px;
+    display: none;
+  }
+  .result-area.show { display: block; }
+  .step {
+    background: rgba(255,255,255,0.04);
+    border-left: 3px solid #4a7cf7;
+    border-radius: 0 10px 10px 0;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    animation: fadeIn 0.3s ease;
+  }
+  .step .label {
+    color: rgba(255,255,255,0.5);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .step .content {
+    color: #e0e0e0;
+    font-size: 15px;
+    font-family: 'Courier New', monospace;
+    line-height: 1.6;
+  }
+  .step .content .highlight {
+    color: #ffcc66;
+    font-weight: bold;
+  }
+  .step .content .highlight-blue {
+    color: #8ab4ff;
+    font-weight: bold;
+  }
+  .step .content .highlight-green {
+    color: #66d9a0;
+    font-weight: bold;
+  }
+  .answer-box {
+    background: linear-gradient(135deg, rgba(74,124,247,0.15), rgba(108,99,255,0.15));
+    border: 1px solid rgba(74,124,247,0.3);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+    margin-top: 12px;
+  }
+  .answer-box .answer-label {
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+  }
+  .answer-box .answer-value {
+    color: #fff;
+    font-size: 28px;
+    font-weight: 700;
+    margin-top: 4px;
+    word-break: break-all;
+  }
+  .answer-box .answer-value .ans-unit {
+    font-weight: 400;
+    color: rgba(255,255,255,0.6);
+    font-size: 18px;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .constants-bar {
+    display: flex;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    padding: 10px 16px;
+    margin-top: 20px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'Courier New', monospace;
+  }
+  .clear-btn {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 8px 16px;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.2s;
+    margin-top: 12px;
+    width: 100%;
+  }
+  .clear-btn:hover {
+    border-color: rgba(255,255,255,0.3);
+    color: #fff;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚡ คำนวณพลังงานคลื่นแม่เหล็กไฟฟ้า</h1>
+  <p class="subtitle">คำนวณ λ (ความยาวคลื่น), ν (ความถี่), E (พลังงาน)</p>
+
+  <div class="formula-banner">
+    <div class="formula">c = <span>λ</span><span>ν</span></div>
+    <div class="formula">E = <span>h</span><span>ν</span></div>
+    <div class="formula">E = <span>h</span>c / <span>λ</span></div>
+  </div>
+
+  <div class="input-group">
+    <label>ความยาวคลื่น (λ) <span class="unit">— กรอกค่าหรือเว้นว่างไว้ 1 ค่า</span></label>
+    <div class="input-row">
+      <input type="number" id="wavelength" step="any" placeholder="ค่าความยาวคลื่น">
+      <select id="wavelength-unit">
+        <option value="1">m</option>
+        <option value="1e-9" selected>nm</option>
+        <option value="1e-6">μm</option>
+        <option value="1e-10">Å</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label>ความถี่ (ν) <span class="unit">Hz</span></label>
+    <input type="number" id="frequency" step="any" placeholder="ค่าความถี่">
+  </div>
+
+  <div class="input-group">
+    <label>พลังงาน (E) <span class="unit">— เลือกหน่วย</span></label>
+    <div class="input-row">
+      <input type="number" id="energy" step="any" placeholder="ค่าพลังงาน">
+      <select id="energy-unit">
+        <option value="1">J</option>
+        <option value="6.242e18">eV</option>
+      </select>
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="calculate()">คำนวณ</button>
+  <button class="clear-btn" onclick="clearAll()">ล้างค่า</button>
+
+  <div class="result-area" id="result-area">
+    <div id="steps-container"></div>
+    <div class="answer-box" id="answer-box">
+      <div class="answer-label" id="answer-label">ผลลัพธ์</div>
+      <div class="answer-value" id="answer-value">0 <span class="ans-unit" id="answer-unit"></span></div>
+    </div>
+  </div>
+
+  <div class="constants-bar">
+    <span>h = 6.626 × 10⁻³⁴ J·s</span>
+    <span>c = 3 × 10⁸ m/s</span>
+  </div>
+</div>
+
+<script>
+const H = 6.626e-34;
+const C = 3e8;
+
+function toSuperscript(n) {
+  const sup = '⁰¹²³⁴⁵⁶⁷⁸⁹⁻';
+  return String(n).split('').map(c => {
+    if (c === '-') return sup[10];
+    if (c === 'e') return '×10';
+    const d = parseInt(c, 10);
+    if (!isNaN(d)) return sup[d];
+    return c;
+  }).join('');
+}
+
+function formatNumber(num) {
+  if (Math.abs(num) === 0) return '0';
+  if (Math.abs(num) >= 1e6 || (Math.abs(num) < 1e-3 && Math.abs(num) > 0)) {
+    const exp = Math.floor(Math.log10(Math.abs(num)));
+    const mantissa = num / Math.pow(10, exp);
+    return mantissa.toFixed(4) + ' × 10' + toSuperscript(exp);
+  }
+  return num.toFixed(6);
+}
+
+function formatNumberShort(num) {
+  if (Math.abs(num) === 0) return '0';
+  const exp = Math.floor(Math.log10(Math.abs(num)));
+  const mantissa = num / Math.pow(10, exp);
+  return mantissa.toFixed(4) + ' × 10' + toSuperscript(exp);
+}
+
+function formatNumberNoExp(num) {
+  if (Math.abs(num) >= 1e3 || (Math.abs(num) < 1e-3 && Math.abs(num) > 0)) {
+    return formatNumberShort(num);
+  }
+  return num.toFixed(6);
+}
+
+function addStep(label, content) {
+  const container = document.getElementById('steps-container');
+  const div = document.createElement('div');
+  div.className = 'step';
+  div.innerHTML = '<div class="label">' + label + '</div><div class="content">' + content + '</div>';
+  container.appendChild(div);
+}
+
+function calculate() {
+  document.getElementById('steps-container').innerHTML = '';
+  document.getElementById('result-area').classList.remove('show');
+
+  const lambdaInput = parseFloat(document.getElementById('wavelength').value);
+  const lambdaUnit = parseFloat(document.getElementById('wavelength-unit').value);
+  const freqInput = parseFloat(document.getElementById('frequency').value);
+  const energyInput = parseFloat(document.getElementById('energy').value);
+  const energyUnit = parseFloat(document.getElementById('energy-unit').value);
+
+  const hasLambda = !isNaN(lambdaInput);
+  const hasFreq = !isNaN(freqInput);
+  const hasEnergy = !isNaN(energyInput);
+  const count = (hasLambda ? 1 : 0) + (hasFreq ? 1 : 0) + (hasEnergy ? 1 : 0);
+
+  if (count < 2) {
+    addStep('⚠️ แจ้งเตือน', 'กรุณากรอกอย่างน้อย <span class="highlight">2 ค่า</span> เพื่อคำนวณ');
+    document.getElementById('result-area').classList.add('show');
+    document.getElementById('answer-box').style.display = 'none';
+    return;
+  }
+
+  let lambda, freq, energy;
+  const steps = [];
+
+  // Convert inputs to SI
+  if (hasLambda) lambda = lambdaInput * lambdaUnit;
+  if (hasFreq) freq = freqInput;
+  if (hasEnergy) energy = energyInput * energyUnit;
+
+  const toCalc = [];
+
+  // Determine what to calculate
+  if (hasLambda && hasFreq && !hasEnergy) toCalc.push('E');
+  if (hasLambda && hasEnergy && !hasFreq) toCalc.push('ν');
+  if (hasFreq && hasEnergy && !hasLambda) toCalc.push('λ');
+  if (hasLambda && hasFreq && hasEnergy) toCalc.push('all');
+
+  // If only 2 given, determine the third
+  if (count === 2 && !hasLambda) toCalc.push('λ');
+  if (count === 2 && !hasFreq) toCalc.push('ν');
+  if (count === 2 && !hasEnergy) toCalc.push('E');
+
+  // Recalculate if all 3 given (for display consistency)
+  if (toCalc.includes('λ') || toCalc.includes('all')) {
+    if (hasFreq) {
+      lambda = C / freq;
+    } else if (hasEnergy) {
+      lambda = H * C / energy;
+    }
+  }
+  if (toCalc.includes('ν') || toCalc.includes('all')) {
+    if (hasLambda) {
+      freq = C / lambda;
+    } else if (hasEnergy) {
+      freq = energy / H;
+    }
+  }
+  if (toCalc.includes('E') || toCalc.includes('all')) {
+    if (hasFreq) {
+      energy = H * freq;
+    } else if (hasLambda) {
+      energy = H * C / lambda;
+    }
+  }
+
+  // Display given values first
+  const givenParts = [];
+  if (hasLambda) givenParts.push('λ = ' + formatNumberShort(lambdaInput * lambdaUnit) + ' m');
+  if (hasFreq) givenParts.push('ν = ' + formatNumberShort(freqInput) + ' Hz');
+  if (hasEnergy) givenParts.push('E = ' + formatNumberShort(energyInput * energyUnit) + ' J');
+
+  addStep('📥 ค่าที่กำหนดให้', givenParts.join(', '));
+
+  // Step-by-step for ν using c = λν
+  if (toCalc.includes('ν')) {
+    addStep('📌 ขั้นตอนที่ 1 — หาความถี่ (ν) จากสูตร <b>c = λν</b>',
+      'ν = c / λ<br>' +
+      'ν = <span class="highlight-blue">3 × 10⁸</span> / <span class="highlight-green">' + formatNumberNoExp(lambda) + '</span><br>' +
+      'ν = <span class="highlight">' + formatNumberShort(freq) + '</span> Hz'
+    );
+  }
+
+  // Step-by-step for λ using c = λν
+  if (toCalc.includes('λ')) {
+    addStep('📌 ขั้นตอนที่ 1 — หาความยาวคลื่น (λ) จากสูตร <b>c = λν</b>',
+      'λ = c / ν<br>' +
+      'λ = <span class="highlight-blue">3 × 10⁸</span> / <span class="highlight-green">' + formatNumberNoExp(freq) + '</span><br>' +
+      'λ = <span class="highlight">' + formatNumberShort(lambda) + '</span> m'
+    );
+  }
+
+  // Step-by-step for E using E = hν
+  if (toCalc.includes('E') && toCalc.includes('ν')) {
+    addStep('📌 ขั้นตอนที่ 2 — หาพลังงาน (E) จากสูตร <b>E = hν</b>',
+      'E = <span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-green">' + formatNumberNoExp(freq) + '</span><br>' +
+      'E = <span class="highlight">' + formatNumberShort(energy) + '</span> J'
+    );
+  } else if (toCalc.includes('E') && !toCalc.includes('ν')) {
+    addStep('📌 ขั้นตอนที่ 1 — หาพลังงาน (E) จากสูตร <b>E = hc/λ</b>',
+      'E = (<span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) / <span class="highlight-green">' + formatNumberNoExp(lambda) + '</span><br>' +
+      'E = <span class="highlight">' + formatNumberShort(energy) + '</span> J'
+    );
+  }
+
+  // if all 3 given, show verification
+  if (toCalc.includes('all')) {
+    addStep('📌 ตรวจสอบ — คำนวณ ν จาก λ',
+      'ν = c / λ = <span class="highlight">' + formatNumberShort(freq) + '</span> Hz'
+    );
+    addStep('📌 ตรวจสอบ — คำนวณ E จาก ν',
+      'E = hν = <span class="highlight">' + formatNumberShort(energy) + '</span> J'
+    );
+    addStep('📌 ตรวจสอบ — คำนวณ E จาก λ',
+      'E = hc/λ = <span class="highlight">' + formatNumberShort(energy) + '</span> J'
+    );
+  }
+
+  // Final display
+  const resultArea = document.getElementById('result-area');
+  resultArea.classList.add('show');
+
+  const answerBox = document.getElementById('answer-box');
+  answerBox.style.display = 'block';
+
+  // Determine main answer
+  if (toCalc.includes('ν') && !toCalc.includes('λ') && !toCalc.includes('E') && !toCalc.includes('all')) {
+    document.getElementById('answer-label').textContent = 'ความถี่ (ν)';
+    document.getElementById('answer-value').innerHTML = formatNumberShort(freq) + ' <span class="ans-unit">Hz</span>';
+  } else if (toCalc.includes('λ') && !toCalc.includes('E') && !toCalc.includes('all')) {
+    document.getElementById('answer-label').textContent = 'ความยาวคลื่น (λ)';
+    document.getElementById('answer-value').innerHTML = formatNumberShort(lambda) + ' <span class="ans-unit">m</span>';
+  } else if (toCalc.includes('E') && !toCalc.includes('all')) {
+    document.getElementById('answer-label').textContent = 'พลังงาน (E)';
+    document.getElementById('answer-value').innerHTML = formatNumberShort(energy) + ' <span class="ans-unit">J</span>';
+  } else {
+    document.getElementById('answer-label').textContent = 'ผลลัพธ์ทั้งหมด';
+    document.getElementById('answer-value').innerHTML =
+      'λ = ' + formatNumberShort(lambda) + ' m' +
+      ' &nbsp;|&nbsp; ν = ' + formatNumberShort(freq) + ' Hz' +
+      ' &nbsp;|&nbsp; E = ' + formatNumberShort(energy) + ' J';
+  }
+}
+
+function clearAll() {
+  document.getElementById('wavelength').value = '';
+  document.getElementById('frequency').value = '';
+  document.getElementById('energy').value = '';
+  document.getElementById('wavelength-unit').value = '1e-9';
+  document.getElementById('energy-unit').value = '1';
+  document.getElementById('steps-container').innerHTML = '';
+  document.getElementById('result-area').classList.remove('show');
+}
+</script>
+</body>
+</html>
