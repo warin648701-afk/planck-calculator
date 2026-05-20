@@ -220,6 +220,17 @@
     border-color: rgba(255,255,255,0.3);
     color: #fff;
   }
+  .watermark {
+    position: fixed;
+    bottom: 12px;
+    right: 16px;
+    color: rgba(255,255,255,0.15);
+    font-size: 14px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    pointer-events: none;
+    z-index: 999;
+  }
 </style>
 </head>
 <body>
@@ -567,5 +578,6 @@ function clearAll() {
   document.getElementById('result-area').classList.remove('show');
 }
 </script>
+<div class="watermark">son warin</div>
 </body>
 </html>
