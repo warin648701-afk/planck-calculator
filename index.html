@@ -608,8 +608,13 @@ function calculate() {
   if (hasLambda && count === 1) {
     const eInE19 = energy / 1e-19;
     const eRounded = eInE19.toFixed(2);
+    const lamExp = Math.floor(Math.log10(lambda));
+    const lamMant = lambda / Math.pow(10, lamExp);
     document.getElementById('answer-label').textContent = 'พลังงาน (E)';
-    document.getElementById('answer-value').innerHTML = eRounded + ' <span class="ans-unit">× 10⁻¹⁹ J</span>';
+    document.getElementById('answer-value').innerHTML =
+      'λ = <span class="ans-unit" style="font-size:16px">' + trimFloat(lamMant.toFixed(4)) + ' × 10<sup>' + lamExp + '</sup> m</span>' +
+      ' &nbsp;&nbsp; | &nbsp;&nbsp; ' +
+      'E = ' + eRounded + ' <span class="ans-unit">× 10⁻¹⁹ J</span>';
   } else if (count === 1 || toCalc.includes('all')) {
     document.getElementById('answer-label').textContent = 'ผลลัพธ์ทั้งหมด';
     document.getElementById('answer-value').innerHTML =
