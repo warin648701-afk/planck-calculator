@@ -274,13 +274,13 @@
   </div>
 
   <div class="constants-bar">
-    <span>h = 6.626 × 10⁻³⁴ J·s</span>
+    <span>h = 6.625 × 10⁻³⁴ J·s</span>
     <span>c = 3 × 10⁸ m/s</span>
   </div>
 </div>
 
 <script>
-const H = 6.626e-34;
+const H = 6.625e-34;
 const C = 3e8;
 
 function toSuperscript(n) {
@@ -428,14 +428,14 @@ function calculate() {
     stepNum++;
     addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาพลังงาน (E) จากสูตร E = hν',
       'จาก &nbsp; E = hν &nbsp; → &nbsp; E = h × ν' +
-      '<br><br>E = <span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
+      '<br><br>E = <span class="highlight-blue">6.625 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
       '<br>E = <span class="highlight">' + fmt(energy) + ' J</span>'
     );
 
     stepNum++;
     addStep('📌 ขั้นตอนที่ ' + stepNum + ' — ตรวจสอบด้วยสูตร E = hc/λ',
       'E = hc / λ' +
-      '<br><br>E = (<span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
+      '<br><br>E = (<span class="highlight-blue">6.625 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
       '<br>E = <span class="highlight">' + fmt(energy) + ' J</span> &nbsp; ✓ ตรงกัน'
     );
 
@@ -453,7 +453,7 @@ function calculate() {
     stepNum++;
     addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาพลังงาน (E) จากสูตร E = hν',
       'E = hν' +
-      '<br><br>E = <span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
+      '<br><br>E = <span class="highlight-blue">6.625 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
       '<br>E = <span class="highlight">' + fmt(energy) + ' J</span>'
     );
 
@@ -464,7 +464,7 @@ function calculate() {
     stepNum++;
     addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาความถี่ (ν) จากสูตร E = hν',
       'จาก &nbsp; E = hν &nbsp; → &nbsp; ν = E / h' +
-      '<br><br>ν = <span class="highlight-green">' + fmt(energy) + '</span> ÷ <span class="highlight-blue">6.626 × 10⁻³⁴</span>' +
+      '<br><br>ν = <span class="highlight-green">' + fmt(energy) + '</span> ÷ <span class="highlight-blue">6.625 × 10⁻³⁴</span>' +
       '<br>ν = <span class="highlight">' + fmt(freq) + ' Hz</span>'
     );
 
@@ -478,7 +478,7 @@ function calculate() {
     stepNum++;
     addStep('📌 ขั้นตอนที่ ' + stepNum + ' — ตรวจสอบด้วยสูตร E = hc/λ',
       'E = hc / λ' +
-      '<br><br>E = (<span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
+      '<br><br>E = (<span class="highlight-blue">6.625 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
       '<br>E = <span class="highlight">' + fmt(energy) + ' J</span> &nbsp; ✓ ตรงกัน'
     );
 
@@ -511,14 +511,14 @@ function calculate() {
         stepNum++;
         addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาพลังงาน (E) จาก E = hν',
           'E = hν' +
-          '<br><br>E = <span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
+          '<br><br>E = <span class="highlight-blue">6.625 × 10⁻³⁴</span> × <span class="highlight-green">' + fmt(freq) + '</span>' +
           '<br>E = <span class="highlight">' + fmt(energy) + ' J</span>'
         );
       } else if (hasLambda) {
         stepNum++;
         addStep('📌 ขั้นตอนที่ ' + stepNum + ' — หาพลังงาน (E) จาก E = hc/λ',
           'E = hc / λ' +
-          '<br><br>E = (<span class="highlight-blue">6.626 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
+          '<br><br>E = (<span class="highlight-blue">6.625 × 10⁻³⁴</span> × <span class="highlight-blue">3 × 10⁸</span>) ÷ <span class="highlight-green">' + fmt(lambda) + '</span>' +
           '<br>E = <span class="highlight">' + fmt(energy) + ' J</span>'
         );
       }
