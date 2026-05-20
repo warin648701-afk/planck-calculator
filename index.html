@@ -234,7 +234,7 @@
   </div>
 
   <div class="input-group">
-    <label>ความยาวคลื่น (λ) <span class="unit">— กรอกค่าหรือเว้นว่างไว้ 1 ค่า</span></label>
+    <label>ความยาวคลื่น (λ) <span class="unit">— กรอกอย่างน้อย 1 ค่า</span></label>
     <div class="input-row">
       <input type="number" id="wavelength" step="any" placeholder="ค่าความยาวคลื่น">
       <select id="wavelength-unit">
@@ -341,8 +341,8 @@ function calculate() {
   const hasEnergy = !isNaN(energyInput);
   const count = (hasLambda ? 1 : 0) + (hasFreq ? 1 : 0) + (hasEnergy ? 1 : 0);
 
-  if (count < 2) {
-    addStep('⚠️ แจ้งเตือน', 'กรุณากรอกอย่างน้อย <span class="highlight">2 ค่า</span> เพื่อคำนวณ');
+  if (count < 1) {
+    addStep('⚠️ แจ้งเตือน', 'กรุณากรอกอย่างน้อย <span class="highlight">1 ค่า</span> เพื่อคำนวณ');
     document.getElementById('result-area').classList.add('show');
     document.getElementById('answer-box').style.display = 'none';
     return;
@@ -359,15 +359,21 @@ function calculate() {
   const toCalc = [];
 
   // Determine what to calculate
-  if (hasLambda && hasFreq && !hasEnergy) toCalc.push('E');
-  if (hasLambda && hasEnergy && !hasFreq) toCalc.push('ν');
-  if (hasFreq && hasEnergy && !hasLambda) toCalc.push('λ');
-  if (hasLambda && hasFreq && hasEnergy) toCalc.push('all');
+  if (count === 1) {
+    // Only 1 value given → calculate the other 2
+    if (hasLambda) { toCalc.push('ν'); toCalc.push('E'); }
+    if (hasFreq) { toCalc.push('λ'); toCalc.push('E'); }
+    if (hasEnergy) { toCalc.push('λ'); toCalc.push('ν'); }
+  } else {
+    if (hasLambda && hasFreq && !hasEnergy) toCalc.push('E');
+    if (hasLambda && hasEnergy && !hasFreq) toCalc.push('ν');
+    if (hasFreq && hasEnergy && !hasLambda) toCalc.push('λ');
+    if (hasLambda && hasFreq && hasEnergy) toCalc.push('all');
 
-  // If only 2 given, determine the third
-  if (count === 2 && !hasLambda) toCalc.push('λ');
-  if (count === 2 && !hasFreq) toCalc.push('ν');
-  if (count === 2 && !hasEnergy) toCalc.push('E');
+    if (count === 2 && !hasLambda) toCalc.push('λ');
+    if (count === 2 && !hasFreq) toCalc.push('ν');
+    if (count === 2 && !hasEnergy) toCalc.push('E');
+  }
 
   // Recalculate if all 3 given (for display consistency)
   if (toCalc.includes('λ') || toCalc.includes('all')) {
@@ -452,21 +458,21 @@ function calculate() {
   answerBox.style.display = 'block';
 
   // Determine main answer
-  if (toCalc.includes('ν') && !toCalc.includes('λ') && !toCalc.includes('E') && !toCalc.includes('all')) {
-    document.getElementById('answer-label').textContent = 'ความถี่ (ν)';
-    document.getElementById('answer-value').innerHTML = formatNumberShort(freq) + ' <span class="ans-unit">Hz</span>';
-  } else if (toCalc.includes('λ') && !toCalc.includes('E') && !toCalc.includes('all')) {
-    document.getElementById('answer-label').textContent = 'ความยาวคลื่น (λ)';
-    document.getElementById('answer-value').innerHTML = formatNumberShort(lambda) + ' <span class="ans-unit">m</span>';
-  } else if (toCalc.includes('E') && !toCalc.includes('all')) {
-    document.getElementById('answer-label').textContent = 'พลังงาน (E)';
-    document.getElementById('answer-value').innerHTML = formatNumberShort(energy) + ' <span class="ans-unit">J</span>';
-  } else {
+  if (count === 1 || toCalc.includes('all')) {
     document.getElementById('answer-label').textContent = 'ผลลัพธ์ทั้งหมด';
     document.getElementById('answer-value').innerHTML =
       'λ = ' + formatNumberShort(lambda) + ' m' +
       ' &nbsp;|&nbsp; ν = ' + formatNumberShort(freq) + ' Hz' +
       ' &nbsp;|&nbsp; E = ' + formatNumberShort(energy) + ' J';
+  } else if (toCalc.includes('ν') && !toCalc.includes('λ') && !toCalc.includes('E')) {
+    document.getElementById('answer-label').textContent = 'ความถี่ (ν)';
+    document.getElementById('answer-value').innerHTML = formatNumberShort(freq) + ' <span class="ans-unit">Hz</span>';
+  } else if (toCalc.includes('λ') && !toCalc.includes('E')) {
+    document.getElementById('answer-label').textContent = 'ความยาวคลื่น (λ)';
+    document.getElementById('answer-value').innerHTML = formatNumberShort(lambda) + ' <span class="ans-unit">m</span>';
+  } else if (toCalc.includes('E')) {
+    document.getElementById('answer-label').textContent = 'พลังงาน (E)';
+    document.getElementById('answer-value').innerHTML = formatNumberShort(energy) + ' <span class="ans-unit">J</span>';
   }
 }
 
